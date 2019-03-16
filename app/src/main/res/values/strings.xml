@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">ChuckNorris</string>
+    <string name="app_name">Chuck Norris Facts</string>
+    <string name="share_button">Share Button</string>
+    <string name="search">Search</string>
 </resources>
