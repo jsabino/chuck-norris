@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.sabinotech.chucknorris.R
@@ -35,6 +36,8 @@ class FactsActivity : AppCompatActivity(), KodeinAware {
     private fun queryFacts() {
         val disposable = viewModel.queryFacts()
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe { showProgressBar() }
+            .doAfterTerminate { hideProgressBar() }
             .subscribe(Consumer {
                 updateRecyclerView(it)
             })
@@ -73,5 +76,13 @@ class FactsActivity : AppCompatActivity(), KodeinAware {
         if (!disposables.isDisposed) {
             disposables.dispose()
         }
+    }
+
+    private fun showProgressBar() {
+        factsProgressBar.visibility = ProgressBar.VISIBLE
+    }
+
+    private fun hideProgressBar() {
+        factsProgressBar.visibility = ProgressBar.GONE
     }
 }
