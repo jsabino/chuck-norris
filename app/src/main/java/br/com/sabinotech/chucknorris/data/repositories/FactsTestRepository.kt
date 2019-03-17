@@ -1,17 +1,17 @@
 package br.com.sabinotech.chucknorris.data.repositories
 
 import br.com.sabinotech.chucknorris.domain.Fact
-import io.reactivex.Observable
+import io.reactivex.Single
 
 class FactsTestRepository : FactsRepository {
 
     private var query: String = ""
 
-    override fun queryFacts(): Observable<List<Fact>> = Observable.create {
+    override fun queryFacts(): Single<List<Fact>> = Single.create {
         if (query == "") {
-            it.onNext(listOf())
+            it.onSuccess(listOf())
         } else {
-            it.onNext(
+            it.onSuccess(
                 listOf(
                     Fact(
                         "1",
@@ -28,8 +28,6 @@ class FactsTestRepository : FactsRepository {
                 )
             )
         }
-
-        it.onComplete()
     }
 
     override fun changeSearchTerm(term: String) {

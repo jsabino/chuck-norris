@@ -2,4 +2,7 @@
     <string name="app_name">Chuck Norris Facts</string>
     <string name="share_button">Share Button</string>
     <string name="search">Search</string>
+    <string name="past_searches">Past Searches</string>
+    <string name="suggestions">Suggestions</string>
+    <string name="search_term_hint">Enter your search term</string>
 </resources>

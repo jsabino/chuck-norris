@@ -1,5 +1,6 @@
 package br.com.sabinotech.chucknorris.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -7,7 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.sabinotech.chucknorris.R
 import br.com.sabinotech.chucknorris.domain.Fact
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.activity_facts.*
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.kodein
@@ -17,20 +20,25 @@ class FactsActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein by kodein()
     private val viewModel: FactsViewModel by instance()
-    private val disposable = CompositeDisposable()
+    private val disposables = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_facts)
+    }
 
+    override fun onResume() {
+        super.onResume()
         queryFacts()
     }
 
     private fun queryFacts() {
-        val subscribe = viewModel.queryFacts().subscribe {
-            updateRecyclerView(it)
-        }
-        disposable.add(subscribe)
+        val disposable = viewModel.queryFacts()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(Consumer {
+                updateRecyclerView(it)
+            })
+        disposables.add(disposable)
     }
 
     private fun updateRecyclerView(facts: List<Fact>) {
@@ -55,14 +63,15 @@ class FactsActivity : AppCompatActivity(), KodeinAware {
     }
 
     private fun openSearchActivity() {
-        TODO("not implemented")
+        val intent = Intent(this, SearchActivity::class.java)
+        startActivity(intent)
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onDestroy() {
+        super.onDestroy()
 
-        if (!disposable.isDisposed) {
-            disposable.dispose()
+        if (!disposables.isDisposed) {
+            disposables.dispose()
         }
     }
 }
