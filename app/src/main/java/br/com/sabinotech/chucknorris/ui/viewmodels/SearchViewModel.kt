@@ -1,4 +1,4 @@
-package br.com.sabinotech.chucknorris.ui
+package br.com.sabinotech.chucknorris.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import br.com.sabinotech.chucknorris.data.repositories.FactsRepository

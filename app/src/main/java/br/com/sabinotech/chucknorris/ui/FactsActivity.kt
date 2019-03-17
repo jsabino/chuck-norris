@@ -4,28 +4,49 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.ViewGroup
 import android.widget.ProgressBar
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.sabinotech.chucknorris.R
 import br.com.sabinotech.chucknorris.domain.Fact
+import br.com.sabinotech.chucknorris.ui.adapters.FactsAdapter
+import br.com.sabinotech.chucknorris.ui.common.BaseActivity
+import br.com.sabinotech.chucknorris.ui.viewmodels.FactsViewModel
+import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.activity_facts.*
-import org.kodein.di.KodeinAware
-import org.kodein.di.android.kodein
 import org.kodein.di.generic.instance
+import retrofit2.HttpException
 
-class FactsActivity : AppCompatActivity(), KodeinAware {
+class FactsActivity : BaseActivity() {
 
-    override val kodein by kodein()
     private val viewModel: FactsViewModel by instance()
-    private val disposables = CompositeDisposable()
+    private val snackbarRoot by lazy { findViewById<ViewGroup>(R.id.mainLayout) }
+    private var persistentSnackbar: Snackbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_facts)
+
+        initNetworkObserver()
+    }
+
+    private fun initNetworkObserver() {
+        val disposable = networkState
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { onNetworkStateChanged(it) }
+        disposables.add(disposable)
+    }
+
+    private fun onNetworkStateChanged(isInternetAvailable: Boolean) {
+        if (!isInternetAvailable) {
+            persistentSnackbar = Snackbar.make(snackbarRoot, "No internet connection", Snackbar.LENGTH_INDEFINITE)
+            persistentSnackbar?.show()
+            return
+        }
+
+        persistentSnackbar?.dismiss()
     }
 
     override fun onResume() {
@@ -34,12 +55,31 @@ class FactsActivity : AppCompatActivity(), KodeinAware {
     }
 
     private fun queryFacts() {
+        if (!networkState.isInternetAvailable()) {
+            return
+        }
+
         val disposable = viewModel.queryFacts()
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { showProgressBar() }
+            .doOnSubscribe {
+                updateRecyclerView(listOf())
+                showProgressBar()
+            }
             .doAfterTerminate { hideProgressBar() }
             .subscribe(Consumer {
-                updateRecyclerView(it)
+                if (it.isSuccess) {
+                    updateRecyclerView(it.getOrThrow())
+                } else {
+                    val errorMsg = it.exceptionOrNull()?.let { t ->
+                        if (t is HttpException) {
+                            t.response().body().toString()
+                        } else {
+                            t::class.toString() + " " + t.message
+                        }
+                    } ?: "unknown error"
+
+                    Snackbar.make(snackbarRoot, errorMsg, Snackbar.LENGTH_LONG).show()
+                }
             })
         disposables.add(disposable)
     }
@@ -68,14 +108,6 @@ class FactsActivity : AppCompatActivity(), KodeinAware {
     private fun openSearchActivity() {
         val intent = Intent(this, SearchActivity::class.java)
         startActivity(intent)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        if (!disposables.isDisposed) {
-            disposables.dispose()
-        }
     }
 
     private fun showProgressBar() {

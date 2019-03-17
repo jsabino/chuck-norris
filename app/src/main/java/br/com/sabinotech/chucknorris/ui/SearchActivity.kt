@@ -2,18 +2,17 @@ package br.com.sabinotech.chucknorris.ui
 
 import android.os.Bundle
 import android.view.inputmethod.EditorInfo
-import androidx.appcompat.app.AppCompatActivity
 import br.com.sabinotech.chucknorris.R
 import br.com.sabinotech.chucknorris.domain.Category
+import br.com.sabinotech.chucknorris.ui.adapters.TagCloudAdapter
+import br.com.sabinotech.chucknorris.ui.common.BaseActivity
+import br.com.sabinotech.chucknorris.ui.viewmodels.SearchViewModel
 import com.google.android.flexbox.FlexboxLayoutManager
 import kotlinx.android.synthetic.main.activity_search.*
-import org.kodein.di.KodeinAware
-import org.kodein.di.android.kodein
 import org.kodein.di.generic.instance
 
-class SearchActivity : AppCompatActivity(), KodeinAware {
+class SearchActivity : BaseActivity() {
 
-    override val kodein by kodein()
     private val viewModel: SearchViewModel by instance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
