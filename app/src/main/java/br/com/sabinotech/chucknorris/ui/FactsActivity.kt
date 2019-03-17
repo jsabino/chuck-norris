@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.sabinotech.chucknorris.R
 import br.com.sabinotech.chucknorris.domain.Fact
 import io.reactivex.disposables.CompositeDisposable
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_facts.*
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.kodein
 import org.kodein.di.generic.instance
@@ -21,7 +21,7 @@ class FactsActivity : AppCompatActivity(), KodeinAware {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_facts)
 
         queryFacts()
     }
