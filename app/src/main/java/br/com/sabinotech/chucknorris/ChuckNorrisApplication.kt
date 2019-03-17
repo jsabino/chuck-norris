@@ -4,8 +4,9 @@ import android.app.Application
 import br.com.sabinotech.chucknorris.data.repositories.FactsRemoteRepository
 import br.com.sabinotech.chucknorris.data.repositories.FactsRepository
 import br.com.sabinotech.chucknorris.data.services.ChuckNorrisService
-import br.com.sabinotech.chucknorris.ui.FactsViewModel
-import br.com.sabinotech.chucknorris.ui.SearchViewModel
+import br.com.sabinotech.chucknorris.ui.common.NetworkState
+import br.com.sabinotech.chucknorris.ui.viewmodels.FactsViewModel
+import br.com.sabinotech.chucknorris.ui.viewmodels.SearchViewModel
 import okhttp3.logging.HttpLoggingInterceptor
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
@@ -22,9 +23,17 @@ class ChuckNorrisApplication : Application(), KodeinAware {
     override val kodein by Kodein.lazy {
         bind<FactsRepository>() with singleton { FactsRemoteRepository(instance()) }
 
-        bind<FactsViewModel>() with provider { FactsViewModel(instance()) }
+        bind<FactsViewModel>() with provider {
+            FactsViewModel(
+                instance()
+            )
+        }
 
-        bind<SearchViewModel>() with provider { SearchViewModel(instance()) }
+        bind<SearchViewModel>() with provider {
+            SearchViewModel(
+                instance()
+            )
+        }
 
         bind<ChuckNorrisService>() with singleton {
             val interceptor = HttpLoggingInterceptor()
@@ -41,5 +50,7 @@ class ChuckNorrisApplication : Application(), KodeinAware {
 
             build.create(ChuckNorrisService::class.java)
         }
+
+        bind<NetworkState>() with singleton { NetworkState() }
     }
 }
