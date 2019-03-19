@@ -4,6 +4,8 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+apply plugin: 'kotlin-kapt'
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -67,4 +69,10 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:3.9.0'
 
     implementation 'com.google.code.gson:gson:2.8.5'
+
+    def room_version = "2.1.0-alpha05"
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-rxjava2:$room_version"
+    /* testImplementation "androidx.room:room-testing:$room_version" */
 }

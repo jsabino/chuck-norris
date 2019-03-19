@@ -62,7 +62,8 @@ class FactsFragment : BaseFragment() {
                 persistentSnackbar?.dismiss()
             } else {
                 snackbarRoot?.run {
-                    Snackbar.make(this, "No internet connection", Snackbar.LENGTH_INDEFINITE).show()
+                    persistentSnackbar = Snackbar.make(this, "No internet connection", Snackbar.LENGTH_INDEFINITE)
+                    persistentSnackbar?.show()
                 }
             }
         })
