@@ -10,6 +10,9 @@ interface ChuckNorrisService {
 
     @GET("jokes/search")
     fun queryFacts(@Query("query") query: String): Single<Response<QueryFactsResponse>>
+
+    @GET("jokes/categories")
+    fun getCategories(): Single<List<String>>
 }
 
 data class QueryFactsResponse(val result: List<QueryFactsResponseItem>)

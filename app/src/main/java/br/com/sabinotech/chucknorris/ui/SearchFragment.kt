@@ -6,12 +6,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import androidx.lifecycle.Observer
 import br.com.sabinotech.chucknorris.R
 import br.com.sabinotech.chucknorris.domain.Category
 import br.com.sabinotech.chucknorris.ui.adapters.TagCloudAdapter
 import br.com.sabinotech.chucknorris.ui.common.BaseFragment
 import com.google.android.flexbox.FlexboxLayoutManager
 import kotlinx.android.synthetic.main.fragment_search.*
+
+const val NUMBER_OF_DISPLAYED_TAGS = 8
 
 class SearchFragment : BaseFragment() {
 
@@ -35,15 +38,11 @@ class SearchFragment : BaseFragment() {
     override fun onResume() {
         super.onResume()
 
-        val categories = listOf(
-            Category("OBAMA"),
-            Category("CAR"),
-            Category("DEV")
-        )
-
         setSearchTermListener()
 
-        updateTagCloud(categories)
+        viewModel.getCategories().observe(this, Observer { categories ->
+            updateTagsCloud(categories.shuffled().take(NUMBER_OF_DISPLAYED_TAGS))
+        })
     }
 
     private fun setSearchTermListener() {
@@ -57,7 +56,7 @@ class SearchFragment : BaseFragment() {
         }
     }
 
-    private fun updateTagCloud(categories: List<Category>) {
+    private fun updateTagsCloud(categories: List<Category>) {
         val adapter = TagCloudAdapter(categories, getTagClickListener())
         searchTagCloud.layoutManager = FlexboxLayoutManager(activity)
         searchTagCloud.adapter = adapter

@@ -1,8 +1,10 @@
 package br.com.sabinotech.chucknorris
 
 import android.app.Application
-import br.com.sabinotech.chucknorris.data.repositories.FactsRemoteRepository
+import androidx.room.Room
+import br.com.sabinotech.chucknorris.data.local.AppDatabase
 import br.com.sabinotech.chucknorris.data.repositories.FactsRepository
+import br.com.sabinotech.chucknorris.data.repositories.FactsRepositoryInterface
 import br.com.sabinotech.chucknorris.data.services.ChuckNorrisService
 import br.com.sabinotech.chucknorris.ui.common.NetworkState
 import br.com.sabinotech.chucknorris.ui.viewmodels.ViewModelFactory
@@ -27,9 +29,17 @@ class ChuckNorrisApplication : Application(), KodeinAware {
 
         bind<DKodein>() with singleton { kodein.direct }
 
-        bind<FactsRepository>() with singleton { FactsRemoteRepository(instance()) }
+        bind<FactsRepositoryInterface>() with singleton { FactsRepository(instance(), instance()) }
 
         bind<ViewModelFactory>() with singleton { ViewModelFactory(instance()) }
+
+        bind<AppDatabase>() with singleton {
+            Room.databaseBuilder(
+                applicationContext,
+                AppDatabase::class.java,
+                "AppDatabase.db"
+            ).build()
+        }
 
         bind<ChuckNorrisService>() with singleton {
             val interceptor = HttpLoggingInterceptor()
