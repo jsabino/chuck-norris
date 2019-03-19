@@ -19,10 +19,11 @@ class TagCloudAdapter(private val categories: List<Category>, private val clickL
     override fun getItemCount(): Int = categories.size
 
     override fun onBindViewHolder(holder: TagCloudViewHolder, position: Int) {
-        val category = categories[position]
-        holder.setCategory(category)
-        holder.setClickListener {
-            clickListener.onClick(category)
+        categories[position].run {
+            holder.setCategory(this)
+            holder.setClickListener {
+                clickListener.onClick(this)
+            }
         }
     }
 

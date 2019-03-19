@@ -1,12 +1,14 @@
 package br.com.sabinotech.chucknorris.ui
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.ProgressBar
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.sabinotech.chucknorris.R
+import br.com.sabinotech.chucknorris.domain.Fact
 import br.com.sabinotech.chucknorris.ui.adapters.FactsAdapter
 import br.com.sabinotech.chucknorris.ui.common.BaseFragment
 import com.google.android.material.snackbar.Snackbar
@@ -48,7 +50,7 @@ class FactsFragment : BaseFragment() {
 
     private fun observeFacts() {
         viewModel.getFacts().observe(this, Observer {
-            val adapter = FactsAdapter(it)
+            val adapter = FactsAdapter(it, getShareButtonClickListener())
             mainRecyclerView.layoutManager = LinearLayoutManager(activity)
             mainRecyclerView.adapter = adapter
         })
@@ -88,6 +90,18 @@ class FactsFragment : BaseFragment() {
         }
 
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun getShareButtonClickListener(): FactsAdapter.ShareButtonClickListener {
+        return object : FactsAdapter.ShareButtonClickListener {
+            override fun onShareButtonClicked(fact: Fact) {
+                val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
+                sharingIntent.type = "text/plain"
+                sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Chuck Norris Fact")
+                sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, fact.text)
+                startActivity(Intent.createChooser(sharingIntent, "Share via"))
+            }
+        }
     }
 
     interface OnRequestSearchListener {
