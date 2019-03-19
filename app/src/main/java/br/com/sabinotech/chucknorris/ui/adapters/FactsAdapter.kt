@@ -1,4 +1,4 @@
-package br.com.sabinotech.chucknorris.ui
+package br.com.sabinotech.chucknorris.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.View
