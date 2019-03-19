@@ -32,7 +32,12 @@ class MainActivity :
     }
 
     override fun onChangeSearchTerm(newSearchTerm: String) {
-        showFacts()
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStack()
+        } else {
+            showFacts()
+        }
+
         viewModel.setSearchTerm(newSearchTerm)
     }
 
