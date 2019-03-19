@@ -19,7 +19,7 @@ class FactsRemoteRepositoryTest {
     @Test
     fun `when no query string is set return empty list`() {
         repository
-            .queryFacts()
+            .queryFacts("")
             .test()
             .assertComplete()
             .assertNoErrors()
@@ -40,9 +40,7 @@ class FactsRemoteRepositoryTest {
         `when`(chuckNorrisService.queryFacts("dev"))
             .thenReturn(Single.just(Response.success(queryFactsResponse)))
 
-        repository.changeSearchTerm("dev")
-
-        val facts = repository.queryFacts().blockingGet()
+        val facts = repository.queryFacts("dev").blockingGet()
         assertThat(facts).isEqualTo(expectedFacts)
     }
 }
