@@ -4,19 +4,23 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.sabinotech.chucknorris.data.repositories.FactsRepository
 import br.com.sabinotech.chucknorris.domain.Fact
-import br.com.sabinotech.chucknorris.ui.common.NetworkState
+import io.reactivex.Observable
+import io.reactivex.Scheduler
 import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 
-class MainViewModel(private val repository: FactsRepository, networkState: NetworkState) : ViewModel() {
+class MainViewModel(
+    private val repository: FactsRepository,
+    networkState: Observable<Boolean>,
+    private val scheduler: Scheduler
+) : ViewModel() {
 
     private var facts = MutableLiveData<List<Fact>>()
     private var isLoading = MutableLiveData<Boolean>()
     private var isInternetAvailable = MutableLiveData<Boolean>()
     private var disposableSearch: Disposable? = null
     private var disposableNetwork = networkState
-        .observeOn(AndroidSchedulers.mainThread())
+        .observeOn(scheduler)
         .subscribe { isInternetAvailable.value = it }
 
     fun getFacts() = facts
@@ -33,7 +37,7 @@ class MainViewModel(private val repository: FactsRepository, networkState: Netwo
             .queryFacts(term)
             .map { Result.success(it) }
             .doOnSubscribe { isLoading.value = true }
-            .observeOn(AndroidSchedulers.mainThread())
+            .observeOn(scheduler)
             .doAfterTerminate { isLoading.value = false }
             .onErrorResumeNext { Single.just(Result.failure(it)) }
             .subscribe { result ->
