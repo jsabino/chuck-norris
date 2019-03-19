@@ -5,7 +5,5 @@ import io.reactivex.Single
 
 interface FactsRepository {
 
-    fun queryFacts(): Single<List<Fact>>
-
-    fun changeSearchTerm(term: String)
+    fun queryFacts(term: String): Single<List<Fact>>
 }

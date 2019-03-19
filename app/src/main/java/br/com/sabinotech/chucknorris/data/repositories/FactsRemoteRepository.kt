@@ -7,15 +7,13 @@ import io.reactivex.schedulers.Schedulers
 
 class FactsRemoteRepository(private val service: ChuckNorrisService) : FactsRepository {
 
-    private var query: String = ""
-
-    override fun queryFacts(): Single<List<Fact>> {
-        if (query == "") {
+    override fun queryFacts(term: String): Single<List<Fact>> {
+        if (term == "") {
             return Single.just(listOf())
         }
 
         return service
-            .queryFacts(query)
+            .queryFacts(term)
             .subscribeOn(Schedulers.io())
             .map {
                 it.body()?.let { response ->
@@ -24,9 +22,5 @@ class FactsRemoteRepository(private val service: ChuckNorrisService) : FactsRepo
                     }
                 }
             }
-    }
-
-    override fun changeSearchTerm(term: String) {
-        query = term
     }
 }
