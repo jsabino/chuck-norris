@@ -1,11 +1,14 @@
 package br.com.sabinotech.chucknorris.ui
 
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
 import androidx.lifecycle.Observer
 import br.com.sabinotech.chucknorris.R
 import br.com.sabinotech.chucknorris.domain.Category
@@ -40,15 +43,16 @@ class SearchFragment : BaseFragment() {
 
         setSearchTermListener()
 
-        viewModel.getCategories().observe(this, Observer { categories ->
-            updateTagsCloud(categories.shuffled().take(NUMBER_OF_DISPLAYED_TAGS))
-        })
+        initCategoriesObserver()
+
+        initPastSearchesObserver()
     }
 
     private fun setSearchTermListener() {
         searchTerm.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                onChangeSearchTermListener.onChangeSearchTerm(searchTerm.text.toString())
+                hideKeyboard()
+                onChangeSearchTermListener.onChangeSearchTerm(searchTerm.text?.toString() ?: "")
                 true
             } else {
                 false
@@ -56,10 +60,26 @@ class SearchFragment : BaseFragment() {
         }
     }
 
-    private fun updateTagsCloud(categories: List<Category>) {
-        val adapter = TagCloudAdapter(categories, getTagClickListener())
-        searchTagCloud.layoutManager = FlexboxLayoutManager(activity)
-        searchTagCloud.adapter = adapter
+    private fun initCategoriesObserver() {
+        viewModel.getCategories().observe(this, Observer { categories ->
+            val selectedCategories = categories.shuffled().take(NUMBER_OF_DISPLAYED_TAGS)
+
+            val adapter = TagCloudAdapter(selectedCategories, getTagClickListener())
+            searchTagCloud.layoutManager = FlexboxLayoutManager(activity)
+            searchTagCloud.adapter = adapter
+        })
+    }
+
+    private fun initPastSearchesObserver() {
+        viewModel.getPastSearches().observe(this, Observer { list ->
+            context?.run {
+                val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
+                pastSearches.adapter = adapter
+                pastSearches.setOnItemClickListener { _, _, position, _ ->
+                    onChangeSearchTermListener.onChangeSearchTerm(list[position])
+                }
+            }
+        })
     }
 
     private fun getTagClickListener(): TagCloudAdapter.ClickListener {
@@ -68,6 +88,17 @@ class SearchFragment : BaseFragment() {
                 onChangeSearchTermListener.onChangeSearchTerm(category.name)
             }
         }
+    }
+
+    private fun hideKeyboard() {
+        context?.run {
+            val imm = this.getSystemService(Activity.INPUT_METHOD_SERVICE)
+            if (imm is InputMethodManager) {
+                imm.hideSoftInputFromWindow(searchTerm.windowToken, 0)
+            }
+        }
+
+        searchTerm.clearFocus()
     }
 
     interface OnChangeSearchTermListener {

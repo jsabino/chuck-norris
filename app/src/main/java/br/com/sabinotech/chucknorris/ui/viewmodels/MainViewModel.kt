@@ -10,7 +10,10 @@ import br.com.sabinotech.chucknorris.domain.Fact
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.Single
-import io.reactivex.disposables.Disposable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+
+const val NUMBER_OF_PAST_SEARCHES = 4
 
 class MainViewModel(
     private val repository: FactsRepositoryInterface,
@@ -18,33 +21,31 @@ class MainViewModel(
     private val scheduler: Scheduler
 ) : ViewModel() {
 
-    private var facts = MutableLiveData<List<Fact>>()
-    private var categories = MutableLiveData<List<Category>>()
-    private var isLoading = MutableLiveData<Boolean>()
-    private var isInternetAvailable = MutableLiveData<Boolean>()
-    private var disposableSearch: Disposable? = null
-    private var disposableCategories: Disposable? = null
-    private var disposableNetwork = networkState
-        .observeOn(scheduler)
-        .subscribe { isInternetAvailable.value = it }
+    private val facts = MutableLiveData<List<Fact>>()
+    private val categories = MutableLiveData<List<Category>>()
+    private val pastSearches = MutableLiveData<List<String>>()
+    private val isLoading = MutableLiveData<Boolean>()
+    private val isInternetAvailable = MutableLiveData<Boolean>()
+    private val disposables = CompositeDisposable()
+    private var isCategoriesObserverInitialized = false
+    private var isPastSearchesObserverInitialized = false
+
+    init {
+        initNetworkObserver(networkState)
+    }
 
     fun getFacts() = facts
 
     fun getCategories(): LiveData<List<Category>> {
-        if (disposableCategories == null) {
-            disposableCategories = repository
-                .getCategories()
-                .doOnSubscribe { isLoading.value = true }
-                .observeOn(scheduler)
-                .doAfterTerminate { isLoading.value = false }
-                .subscribe({ result ->
-                        categories.value = result
-                    }, { throwable ->
-                        Log.d("JAYSON VM", "ERROR $throwable")
-                    })
-        }
+        initCategoriesObserver()
 
         return categories
+    }
+
+    fun getPastSearches(): LiveData<List<String>> {
+        initPastSearchesObserver()
+
+        return pastSearches
     }
 
     fun isLoading() = isLoading
@@ -52,10 +53,17 @@ class MainViewModel(
     fun isInternetAvailable() = isInternetAvailable
 
     fun setSearchTerm(term: String) {
-        disposeSearch()
-
         facts.value = listOf()
-        disposableSearch = repository
+
+        if (term != "") {
+            saveSearch(term)
+
+            searchFactsWithTheTerm(term)
+        }
+    }
+
+    private fun searchFactsWithTheTerm(term: String) {
+        val disposableSearch = repository
             .queryFacts(term)
             .map { Result.success(it) }
             .doOnSubscribe { isLoading.value = true }
@@ -69,36 +77,66 @@ class MainViewModel(
 
                 }
             }
+        disposables.add(disposableSearch)
     }
 
-    private fun disposeSearch() {
-        disposableSearch?.run {
-            if (!isDisposed) {
-                dispose()
-            }
-        }
+    private fun saveSearch(term: String) {
+        val disposable = repository
+            .saveSearch(term)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe()
+        disposables.add(disposable)
     }
 
-    private fun disposeCategories() {
-        disposableCategories?.run {
-            if (!isDisposed) {
-                dispose()
-            }
-        }
+    private fun initNetworkObserver(networkState: Observable<Boolean>) {
+        disposables.add(
+            networkState
+                .observeOn(scheduler)
+                .subscribe { isInternetAvailable.value = it })
     }
 
-    private fun disposeNetwork() {
-        disposableNetwork?.run {
-            if (!isDisposed) {
-                dispose()
-            }
+    private fun initCategoriesObserver() {
+        if (isCategoriesObserverInitialized) {
+            return
         }
+
+        val disposable = repository
+            .getCategories()
+            .doOnSubscribe { isLoading.value = true }
+            .observeOn(scheduler)
+            .doAfterTerminate { isLoading.value = false }
+            .subscribe({ result ->
+                categories.value = result
+            }, { throwable ->
+                Log.d("JAYSON VM", "ERROR $throwable")
+            })
+
+        disposables.add(disposable)
+        isCategoriesObserverInitialized = true
+    }
+
+    private fun initPastSearchesObserver() {
+        if (isPastSearchesObserverInitialized) {
+            return
+        }
+
+        val disposable = repository
+            .getPastSearches(NUMBER_OF_PAST_SEARCHES)
+            .doOnSubscribe { isLoading.value = true }
+            .observeOn(scheduler)
+            .doAfterTerminate { isLoading.value = false }
+            .subscribe({ result ->
+                pastSearches.value = result
+            }, { throwable ->
+                Log.d("JAYSON VM", "ERROR $throwable")
+            })
+
+        disposables.add(disposable)
+        isPastSearchesObserverInitialized = true
     }
 
     override fun onCleared() {
         super.onCleared()
-        disposeSearch()
-        disposeCategories()
-        disposeNetwork()
+        disposables.dispose()
     }
 }

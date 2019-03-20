@@ -1,10 +1,12 @@
 package br.com.sabinotech.chucknorris.data.repositories
 
 import br.com.sabinotech.chucknorris.data.local.AppDatabase
+import br.com.sabinotech.chucknorris.data.local.model.Search
 import br.com.sabinotech.chucknorris.data.services.ChuckNorrisService
 import br.com.sabinotech.chucknorris.domain.Category
 import br.com.sabinotech.chucknorris.domain.Fact
 import io.reactivex.Maybe
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 
@@ -41,6 +43,16 @@ class FactsRepository(
             .subscribeOn(Schedulers.io())
             .firstElement()
     }
+
+    override fun saveSearch(term: String) = database
+        .searchDao()
+        .insert(Search(id = null, term = term))
+        .subscribeOn(Schedulers.io())
+
+    override fun getPastSearches(quantity: Int): Observable<List<String>> = database
+        .searchDao()
+        .getLast(quantity)
+        .subscribeOn(Schedulers.io())
 
     private fun getCategoriesLocal() = database
         .categoryDao()

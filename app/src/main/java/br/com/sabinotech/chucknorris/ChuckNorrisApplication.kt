@@ -35,11 +35,14 @@ class ChuckNorrisApplication : Application(), KodeinAware {
         bind<ViewModelFactory>() with singleton { ViewModelFactory(instance()) }
 
         bind<AppDatabase>() with singleton {
-            Room.databaseBuilder(
-                applicationContext,
-                AppDatabase::class.java,
-                "AppDatabase.db"
-            ).build()
+            Room
+                .databaseBuilder(
+                    applicationContext,
+                    AppDatabase::class.java,
+                    "AppDatabase.db"
+                )
+                .fallbackToDestructiveMigration()
+                .build()
         }
 
         bind<ChuckNorrisService>() with singleton {
