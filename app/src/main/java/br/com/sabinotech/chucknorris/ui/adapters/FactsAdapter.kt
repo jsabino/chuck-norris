@@ -39,7 +39,8 @@ class FactViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     fun setFact(fact: Fact) {
         itemView.factText.text = fact.text
-        itemView.factCategory.text = getFactCategoryName(fact)
+        itemView.factText.textSize = fact.getTextSize()
+        itemView.factCategory.text = fact.getCategoryName()
     }
 
     fun setShareButtonClickListener(shareButtonClickListener: () -> Unit) {
@@ -47,7 +48,4 @@ class FactViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             shareButtonClickListener()
         }
     }
-
-    private fun getFactCategoryName(fact: Fact) = fact.category ?: "UNCATEGORIZED"
 }
-
