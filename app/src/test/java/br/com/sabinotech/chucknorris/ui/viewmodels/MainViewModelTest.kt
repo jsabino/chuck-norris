@@ -5,6 +5,7 @@ import br.com.sabinotech.chucknorris.common.testObserver
 import br.com.sabinotech.chucknorris.data.repositories.FactsRepositoryInterface
 import br.com.sabinotech.chucknorris.domain.Category
 import br.com.sabinotech.chucknorris.domain.Fact
+import io.reactivex.Completable
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -14,7 +15,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
-
 
 class MainViewModelTest {
 
@@ -60,6 +60,7 @@ class MainViewModelTest {
         )
 
         `when`(factsRepository.queryFacts("DEV")).thenReturn(Single.just(expectedFacts))
+        `when`(factsRepository.saveSearch("DEV")).thenReturn(Completable.complete())
 
         val testObserver = mainViewModel.getFacts().testObserver()
 
@@ -70,11 +71,26 @@ class MainViewModelTest {
     @Test
     fun `when searchTerm is set the loading must be triggered`() {
         `when`(factsRepository.queryFacts("DEV")).thenReturn(Single.just(listOf()))
+        `when`(factsRepository.saveSearch("DEV")).thenReturn(Completable.complete())
 
         val testObserver = mainViewModel.isLoading().testObserver()
 
         mainViewModel.setSearchTerm("DEV")
         Assert.assertEquals(listOf(true, false), testObserver.observedValues)
+    }
+
+    @Test
+    fun `when searchTerm is set the term must be saved on database`() {
+        `when`(factsRepository.queryFacts("DEV")).thenReturn(Single.just(listOf()))
+
+        var isSearchSaved = false
+        `when`(factsRepository.saveSearch("DEV")).thenAnswer {
+            isSearchSaved = true
+            Completable.complete()
+        }
+
+        mainViewModel.setSearchTerm("DEV")
+        Assert.assertEquals(true, isSearchSaved)
     }
 
     @Test

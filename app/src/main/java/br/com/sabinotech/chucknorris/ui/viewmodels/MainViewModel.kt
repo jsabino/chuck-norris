@@ -10,7 +10,6 @@ import br.com.sabinotech.chucknorris.domain.Fact
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 
 const val NUMBER_OF_PAST_SEARCHES = 4
@@ -83,7 +82,7 @@ class MainViewModel(
     private fun saveSearch(term: String) {
         val disposable = repository
             .saveSearch(term)
-            .observeOn(AndroidSchedulers.mainThread())
+            .observeOn(scheduler)
             .subscribe()
         disposables.add(disposable)
     }
