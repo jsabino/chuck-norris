@@ -20,6 +20,7 @@ import org.kodein.di.generic.singleton
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 class ChuckNorrisApplication : Application(), KodeinAware {
 
@@ -45,7 +46,10 @@ class ChuckNorrisApplication : Application(), KodeinAware {
             val interceptor = HttpLoggingInterceptor()
             interceptor.level = HttpLoggingInterceptor.Level.BODY
 
-            val httpClient = okhttp3.OkHttpClient.Builder().addInterceptor(interceptor).build()
+            val httpClient = okhttp3.OkHttpClient.Builder()
+                .addInterceptor(interceptor)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build()
 
             val build = Retrofit.Builder()
                 .baseUrl("https://api.chucknorris.io/")
