@@ -16,11 +16,13 @@ import br.com.sabinotech.chucknorris.ui.adapters.TagCloudAdapter
 import br.com.sabinotech.chucknorris.ui.common.BaseFragment
 import com.google.android.flexbox.FlexboxLayoutManager
 import kotlinx.android.synthetic.main.fragment_search.*
+import kotlinx.android.synthetic.main.fragment_search.view.*
 
 const val NUMBER_OF_DISPLAYED_TAGS = 8
 
 class SearchFragment : BaseFragment() {
 
+    private lateinit var snackbarRoot: ViewGroup
     private lateinit var onChangeSearchTermListener: OnChangeSearchTermListener
 
     override fun onAttach(context: Context) {
@@ -38,14 +40,18 @@ class SearchFragment : BaseFragment() {
         return inflater.inflate(R.layout.fragment_search, container, false)
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        snackbarRoot = view!!.fragmentSearchMainLayout
 
         setSearchTermListener()
 
         initCategoriesObserver()
 
         initPastSearchesObserver()
+
+        initErrorObserver(snackbarRoot)
     }
 
     private fun setSearchTermListener() {

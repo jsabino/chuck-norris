@@ -13,6 +13,7 @@ import io.reactivex.schedulers.Schedulers
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 
@@ -111,5 +112,47 @@ class MainViewModelTest {
 
         val testObserver = mainViewModel.getCategories().testObserver()
         Assert.assertEquals(listOf(expectedCategories), testObserver.observedValues)
+    }
+
+    @Test
+    fun `get notified about errors getting facts`() {
+        `when`(factsRepository.saveSearch("DEV")).thenReturn(Completable.complete())
+        `when`(factsRepository.queryFacts("DEV")).thenReturn(Single.error(RuntimeException("Test")))
+
+        val testObserver = mainViewModel.getErrors().testObserver()
+        mainViewModel.setSearchTerm("DEV")
+
+        Assert.assertEquals(listOf("There was an error loading the facts"), testObserver.observedValues)
+    }
+
+    @Test
+    fun `get notified about errors saving search term`() {
+        `when`(factsRepository.saveSearch("DEV")).thenReturn(Completable.error(RuntimeException("Test")))
+        `when`(factsRepository.queryFacts("DEV")).thenReturn(Single.just(listOf()))
+
+        val testObserver = mainViewModel.getErrors().testObserver()
+        mainViewModel.setSearchTerm("DEV")
+
+        Assert.assertEquals(listOf("There was an error saving your search"), testObserver.observedValues)
+    }
+
+    @Test
+    fun `get notified about errors getting categories`() {
+        `when`(factsRepository.getCategories()).thenReturn(Maybe.error(RuntimeException("Test")))
+
+        val testObserver = mainViewModel.getErrors().testObserver()
+        mainViewModel.getCategories()
+
+        Assert.assertEquals(listOf("There was an error loading the suggestions"), testObserver.observedValues)
+    }
+
+    @Test
+    fun `get notified about errors getting past searches`() {
+        `when`(factsRepository.getPastSearches(Mockito.anyInt())).thenReturn(Observable.error(RuntimeException("Test")))
+
+        val testObserver = mainViewModel.getErrors().testObserver()
+        mainViewModel.getPastSearches()
+
+        Assert.assertEquals(listOf("There was an error loading the past searches"), testObserver.observedValues)
     }
 }
