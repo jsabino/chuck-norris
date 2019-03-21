@@ -1,9 +1,12 @@
 package br.com.sabinotech.chucknorris.ui.common
 
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import br.com.sabinotech.chucknorris.ui.viewmodels.MainViewModel
+import com.google.android.material.snackbar.Snackbar
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.kodein
@@ -17,5 +20,11 @@ abstract class BaseFragment : Fragment(), KodeinAware {
         activity?.run {
             ViewModelProviders.of(this, viewModeFactory).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid activity")
+    }
+
+    protected fun initErrorObserver(snackbarRoot: ViewGroup) {
+        viewModel.getErrors().observe(viewLifecycleOwner, Observer {
+            Snackbar.make(snackbarRoot, it, Snackbar.LENGTH_SHORT).show()
+        })
     }
 }

@@ -1,15 +1,14 @@
 package br.com.sabinotech.chucknorris.ui.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.sabinotech.chucknorris.data.repositories.FactsRepositoryInterface
 import br.com.sabinotech.chucknorris.domain.Category
 import br.com.sabinotech.chucknorris.domain.Fact
+import br.com.sabinotech.chucknorris.ui.common.SingleLiveEvent
 import io.reactivex.Observable
 import io.reactivex.Scheduler
-import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 
 const val NUMBER_OF_PAST_SEARCHES = 4
@@ -25,6 +24,7 @@ class MainViewModel(
     private val pastSearches = MutableLiveData<List<String>>()
     private val isLoading = MutableLiveData<Boolean>()
     private val isInternetAvailable = MutableLiveData<Boolean>()
+    private val lastError = SingleLiveEvent<String>()
     private val disposables = CompositeDisposable()
     private var isCategoriesObserverInitialized = false
     private var isPastSearchesObserverInitialized = false
@@ -49,6 +49,8 @@ class MainViewModel(
 
     fun isLoading() = isLoading
 
+    fun getErrors() = lastError
+
     fun isInternetAvailable() = isInternetAvailable
 
     fun setSearchTerm(term: String) {
@@ -62,20 +64,21 @@ class MainViewModel(
     }
 
     private fun searchFactsWithTheTerm(term: String) {
+        if (isInternetAvailable.value == false) {
+            return
+        }
+
         val disposableSearch = repository
             .queryFacts(term)
-            .map { Result.success(it) }
             .doOnSubscribe { isLoading.value = true }
             .observeOn(scheduler)
             .doAfterTerminate { isLoading.value = false }
-            .onErrorResumeNext { Single.just(Result.failure(it)) }
-            .subscribe { result ->
-                if (result.isSuccess) {
-                    facts.value = result.getOrThrow()
-                } else {
-
+            .subscribe ({
+                    facts.value = it
+                }, {
+                    lastError.value = "There was an error loading the facts"
                 }
-            }
+            )
         disposables.add(disposableSearch)
     }
 
@@ -83,6 +86,10 @@ class MainViewModel(
         val disposable = repository
             .saveSearch(term)
             .observeOn(scheduler)
+            .onErrorComplete {
+                lastError.value = "There was an error saving your search"
+                true
+            }
             .subscribe()
         disposables.add(disposable)
     }
@@ -95,6 +102,9 @@ class MainViewModel(
     }
 
     private fun initCategoriesObserver() {
+        if (isInternetAvailable.value == false) {
+            return
+        }
         if (isCategoriesObserverInitialized) {
             return
         }
@@ -104,14 +114,14 @@ class MainViewModel(
             .doOnSubscribe { isLoading.value = true }
             .observeOn(scheduler)
             .doAfterTerminate { isLoading.value = false }
-            .subscribe({ result ->
-                categories.value = result
-            }, { throwable ->
-                Log.d("JAYSON VM", "ERROR $throwable")
+            .subscribe({
+                categories.value = it
+                isCategoriesObserverInitialized = true
+            }, {
+                lastError.value = "There was an error loading the suggestions"
             })
 
         disposables.add(disposable)
-        isCategoriesObserverInitialized = true
     }
 
     private fun initPastSearchesObserver() {
@@ -121,13 +131,11 @@ class MainViewModel(
 
         val disposable = repository
             .getPastSearches(NUMBER_OF_PAST_SEARCHES)
-            .doOnSubscribe { isLoading.value = true }
             .observeOn(scheduler)
-            .doAfterTerminate { isLoading.value = false }
-            .subscribe({ result ->
-                pastSearches.value = result
-            }, { throwable ->
-                Log.d("JAYSON VM", "ERROR $throwable")
+            .subscribe({
+                pastSearches.value = it
+            }, {
+                lastError.value = "There was an error loading the past searches"
             })
 
         disposables.add(disposable)

@@ -13,10 +13,11 @@ import br.com.sabinotech.chucknorris.ui.adapters.FactsAdapter
 import br.com.sabinotech.chucknorris.ui.common.BaseFragment
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_facts.*
+import kotlinx.android.synthetic.main.fragment_facts.view.*
 
 class FactsFragment : BaseFragment() {
 
-    private val snackbarRoot by lazy { view?.findViewById<ViewGroup>(R.id.mainLayout) }
+    private lateinit var snackbarRoot: ViewGroup
     private var persistentSnackbar: Snackbar? = null
     private lateinit var onRequestSearchListener: OnRequestSearchListener
 
@@ -40,37 +41,47 @@ class FactsFragment : BaseFragment() {
         return inflater.inflate(R.layout.fragment_facts, container, false)
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
 
-        observeInternetAvailability()
-        observeLoading()
-        observeFacts()
+        snackbarRoot = view!!.fragmentFactsMainLayout
+
+        initInternetAvailabilityObserver()
+
+        initLoadingObserver()
+
+        initFactsObserver()
+
+        initErrorObserver(snackbarRoot)
     }
 
-    private fun observeFacts() {
-        viewModel.getFacts().observe(this, Observer {
+    override fun onPause() {
+        super.onPause()
+
+        persistentSnackbar?.dismiss()
+    }
+
+    private fun initFactsObserver() {
+        viewModel.getFacts().observe(viewLifecycleOwner, Observer {
             val adapter = FactsAdapter(it, getShareButtonClickListener())
             mainRecyclerView.layoutManager = LinearLayoutManager(activity)
             mainRecyclerView.adapter = adapter
         })
     }
 
-    private fun observeInternetAvailability() {
-        viewModel.isInternetAvailable().observe(this, Observer { isAvailable ->
+    private fun initInternetAvailabilityObserver() {
+        viewModel.isInternetAvailable().observe(viewLifecycleOwner, Observer { isAvailable ->
             if (isAvailable) {
                 persistentSnackbar?.dismiss()
             } else {
-                snackbarRoot?.run {
-                    persistentSnackbar = Snackbar.make(this, "No internet connection", Snackbar.LENGTH_INDEFINITE)
-                    persistentSnackbar?.show()
-                }
+                persistentSnackbar = Snackbar.make(snackbarRoot, "No internet connection", Snackbar.LENGTH_INDEFINITE)
+                persistentSnackbar?.show()
             }
         })
     }
 
-    private fun observeLoading() {
-        viewModel.isLoading().observe(this, Observer { isLoading ->
+    private fun initLoadingObserver() {
+        viewModel.isLoading().observe(viewLifecycleOwner, Observer { isLoading ->
             if (isLoading) {
                 factsProgressBar.visibility = ProgressBar.VISIBLE
             } else {
