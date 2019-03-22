@@ -20,6 +20,7 @@ import br.com.sabinotech.chucknorris.data.services.ChuckNorrisService
 import br.com.sabinotech.chucknorris.ui.adapters.TagCloudViewHolder
 import org.hamcrest.CoreMatchers
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,7 +43,12 @@ class MainActivityTest : KodeinAware {
     override val kodeinContext = kcontext(context)
     private val chuckNorrisService: ChuckNorrisService by instance()
     private val appDatabase: AppDatabase by instance()
-    private val serviceMock = SetupServiceMock(chuckNorrisService)
+    private lateinit var serviceMock: SetupServiceMock
+
+    @Before
+    fun setup() {
+        serviceMock = SetupServiceMock(chuckNorrisService)
+    }
 
     @Test
     fun checkIfTheFactsFragmentHasBeenLoaded() {
@@ -118,8 +124,8 @@ class MainActivityTest : KodeinAware {
         onView(ViewMatchers.withId(R.id.action_search)).perform(ViewActions.click())
 
         onView(ViewMatchers.withId(R.id.searchTagCloud)).perform(
-            RecyclerViewActions.actionOnItemAtPosition<TagCloudViewHolder>(
-                serviceMock.listOfCategories.indexOf(serviceMock.queryTermForSuccess),
+            RecyclerViewActions.actionOnItem<TagCloudViewHolder>(
+                ViewMatchers.withText(serviceMock.queryTermForSuccess),
                 ViewActions.click()
             )
         )
