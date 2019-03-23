@@ -65,7 +65,7 @@ class MainActivityTest : KodeinAware {
         onView(ViewMatchers.withId(R.id.mainRecyclerView)).check { view, _ ->
             Assert.assertEquals(RecyclerView::class.java, view::class.java)
             val recyclerView = view as RecyclerView
-            Assert.assertNull(recyclerView.adapter)
+            Assert.assertEquals(0, recyclerView.adapter?.itemCount)
         }
     }
 

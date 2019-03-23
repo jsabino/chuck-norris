@@ -9,9 +9,10 @@ import br.com.sabinotech.chucknorris.domain.Fact
 import kotlinx.android.synthetic.main.chuck_norris_fact.view.*
 
 class FactsAdapter(
-    private val facts: List<Fact>,
     private val shareButtonClickListener: ShareButtonClickListener
 ) : RecyclerView.Adapter<FactViewHolder>() {
+
+    private val facts = mutableListOf<Fact>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FactViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.chuck_norris_fact, parent, false)
@@ -28,6 +29,12 @@ class FactsAdapter(
                 shareButtonClickListener.onShareButtonClicked(this)
             }
         }
+    }
+
+    fun changeItems(newFacts: List<Fact>) {
+        facts.clear()
+        facts.addAll(newFacts)
+        notifyDataSetChanged()
     }
 
     interface ShareButtonClickListener {

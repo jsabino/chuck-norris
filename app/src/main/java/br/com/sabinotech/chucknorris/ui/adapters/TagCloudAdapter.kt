@@ -8,8 +8,11 @@ import br.com.sabinotech.chucknorris.R
 import br.com.sabinotech.chucknorris.domain.Category
 import kotlinx.android.synthetic.main.category.view.*
 
-class TagCloudAdapter(private val categories: List<Category>, private val clickListener: ClickListener) :
-    RecyclerView.Adapter<TagCloudViewHolder>() {
+class TagCloudAdapter(
+    private val clickListener: ClickListener
+) : RecyclerView.Adapter<TagCloudViewHolder>() {
+
+    private val categories = mutableListOf<Category>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TagCloudViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.category, parent, false)
@@ -25,6 +28,12 @@ class TagCloudAdapter(private val categories: List<Category>, private val clickL
                 clickListener.onClick(this)
             }
         }
+    }
+
+    fun changeItems(newCategories: List<Category>) {
+        categories.clear()
+        categories.addAll(newCategories)
+        notifyDataSetChanged()
     }
 
     interface ClickListener {

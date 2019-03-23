@@ -24,6 +24,8 @@ class SearchFragment : BaseFragment() {
 
     private lateinit var snackbarRoot: ViewGroup
     private lateinit var onChangeSearchTermListener: OnChangeSearchTermListener
+    private val tagCloudAdapter = TagCloudAdapter(getTagClickListener())
+    private lateinit var pastSearchesAdapter: ArrayAdapter<String>
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -44,6 +46,10 @@ class SearchFragment : BaseFragment() {
         super.onActivityCreated(savedInstanceState)
 
         snackbarRoot = view!!.fragmentSearchMainLayout
+
+        setupCategoriesAdapter()
+
+        setupPastSearchesAdapter()
 
         setSearchTermListener()
 
@@ -66,25 +72,33 @@ class SearchFragment : BaseFragment() {
         }
     }
 
+    private fun setupCategoriesAdapter() {
+        searchTagCloud.layoutManager = FlexboxLayoutManager(activity)
+        searchTagCloud.adapter = tagCloudAdapter
+    }
+
     private fun initCategoriesObserver() {
         viewModel.getCategories().observe(this, Observer { categories ->
-            val selectedCategories = categories.shuffled().take(NUMBER_OF_DISPLAYED_TAGS)
-
-            val adapter = TagCloudAdapter(selectedCategories, getTagClickListener())
-            searchTagCloud.layoutManager = FlexboxLayoutManager(activity)
-            searchTagCloud.adapter = adapter
+            tagCloudAdapter.changeItems(categories.shuffled().take(NUMBER_OF_DISPLAYED_TAGS))
         })
+    }
+
+    private fun setupPastSearchesAdapter() {
+        context?.run {
+            pastSearchesAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf<String>())
+            pastSearches.adapter = pastSearchesAdapter
+            pastSearches.setOnItemClickListener { _, _, position, _ ->
+                pastSearchesAdapter.getItem(position)?.let {
+                    onChangeSearchTermListener.onChangeSearchTerm(it)
+                }
+            }
+        }
     }
 
     private fun initPastSearchesObserver() {
         viewModel.getPastSearches().observe(this, Observer { list ->
-            context?.run {
-                val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
-                pastSearches.adapter = adapter
-                pastSearches.setOnItemClickListener { _, _, position, _ ->
-                    onChangeSearchTermListener.onChangeSearchTerm(list[position])
-                }
-            }
+            pastSearchesAdapter.clear()
+            pastSearchesAdapter.addAll(list)
         })
     }
 

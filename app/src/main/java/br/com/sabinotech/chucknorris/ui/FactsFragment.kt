@@ -20,6 +20,7 @@ class FactsFragment : BaseFragment() {
     private lateinit var snackbarRoot: ViewGroup
     private var persistentSnackbar: Snackbar? = null
     private lateinit var onRequestSearchListener: OnRequestSearchListener
+    private val factsAdapter = FactsAdapter(getShareButtonClickListener())
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -46,6 +47,8 @@ class FactsFragment : BaseFragment() {
 
         snackbarRoot = view!!.fragmentFactsMainLayout
 
+        setupFactsAdapter()
+
         initInternetAvailabilityObserver()
 
         initLoadingObserver()
@@ -61,11 +64,14 @@ class FactsFragment : BaseFragment() {
         persistentSnackbar?.dismiss()
     }
 
+    private fun setupFactsAdapter() {
+        mainRecyclerView.layoutManager = LinearLayoutManager(activity)
+        mainRecyclerView.adapter = factsAdapter
+    }
+
     private fun initFactsObserver() {
         viewModel.getFacts().observe(viewLifecycleOwner, Observer {
-            val adapter = FactsAdapter(it, getShareButtonClickListener())
-            mainRecyclerView.layoutManager = LinearLayoutManager(activity)
-            mainRecyclerView.adapter = adapter
+            factsAdapter.changeItems(it)
         })
     }
 
